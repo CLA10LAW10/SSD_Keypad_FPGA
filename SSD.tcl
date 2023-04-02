@@ -7,14 +7,14 @@ if { [info exists ::origin_dir_loc] } {
 }
 
 # Set the project name
-set _xil_proj_name_ "SSD_proj_"
+set _xil_proj_name_ "ssd_proj_"
 
 # default project name append with commitId
 set commitId [exec git rev-parse HEAD]
 append _xil_proj_name_ [string range $commitId 0 5]
 
 variable script_file
-set script_file "SSD.tcl"
+set script_file "ssd.tcl"
 
 # Set the directory path for the original project from where this script was exported
 set orig_proj_dir "[file normalize "$origin_dir/build/$_xil_proj_name_"]"
@@ -32,7 +32,7 @@ if { $validate_required } {
 
 # Create project
 set project_dir build/${_xil_proj_name_}
-create_project ${_xil_proj_name_} $origin_dir/$proj_dir -part xc7z010clg400-1
+create_project ${_xil_proj_name_} $origin_dir/$project_dir -part xc7z010clg400-1
 
 # Set the directory path for the new project
 set proj_dir [get_property directory [current_project]]
@@ -128,7 +128,20 @@ if {[string equal [get_filesets -quiet sim_1] ""]} {
 
 # Set 'sim_1' fileset object
 set obj [get_filesets sim_1]
-# Empty (no sources present)
+set files [list \
+ [file normalize "${origin_dir}/sim/ssd_tb.sv"] \
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sim_1' fileset file properties for remote files
+set file "$origin_dir/sim/ssd_tb.sv"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sim_1] [list "*$file"]]
+set_property -name "file_type" -value "SystemVerilog" -objects $file_obj
+
+
+# Set 'sim_1' fileset file properties for local files
+# None
 
 # Set 'sim_1' fileset properties
 set obj [get_filesets sim_1]
