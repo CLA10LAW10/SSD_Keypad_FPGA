@@ -21,20 +21,21 @@ module ssd_top(
   logic c_sel;
   logic is_a_key_pressed;
   logic [3:0] decode_out;
-    assign rst = btn[0];
+  assign rst = btn[0];
   //assign keypad_w =
-    // State for the left and the right
+  // State for the left and the right
 
   keypad_decoder de_inst1(
                    .clk(clk),
                    .rst(rst),
-                   .row(keypad[3:0]),
-                   .col(keypad[7:4]),
+                   .row(keypad[7:4]),
+                   .col(keypad[3:0]),
                    .decode_out(decode_out), // Pass to SSD Controller
                    .is_a_key_pressed(is_a_key_pressed));
 
   disp_ctrl ssd_i(
-              .disp_val(decode_out),
+              .disp_val(sw),
+              //.disp_val(decode_out),
               .seg_out(seg));
 
   debounce  #(
@@ -69,7 +70,7 @@ module ssd_top(
     end
   end
 
-
+  assign led = decode_out;
   assign chip_sel = c_sel;
 
 endmodule

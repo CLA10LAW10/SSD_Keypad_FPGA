@@ -165,7 +165,7 @@ module keypad_decoder(
       else if (sclk == 20'd400000)
       begin
         // Column 4
-        col = 4'b1011;
+        col = 4'b1110;
         sclk = sclk + 1;
       end
       // Check row pins
