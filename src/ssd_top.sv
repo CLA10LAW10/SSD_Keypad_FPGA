@@ -5,6 +5,7 @@ module ssd_top(
     input [3:0] btn,
     input [3:0] sw,
     output [3:0] led,
+    output led_g,
     output [6:0] seg,
     output chip_sel,
     inout [7:0] keypad
@@ -14,14 +15,16 @@ module ssd_top(
   parameter stable_time = 10; // ms
 
   logic rst;
-
   logic btn1_debounce;
   logic btn1_pulse;
+  logic l_ssd;
+  logic r_ssd;
+  logic output_ssd;
   logic [7:0] keypad_w;
   logic c_sel;
   logic is_a_key_pressed;
   logic [3:0] decode_out;
-  assign rst = btn[0];
+
   //assign keypad_w =
   // State for the left and the right
 
@@ -36,7 +39,7 @@ module ssd_top(
   disp_ctrl ssd_i(
               //.disp_val(sw),
               .disp_val(decode_out),
-              .seg_out(seg));
+              .seg_out(output_ssd));
 
   debounce  #(
               .clk_freq(clk_freq),
@@ -58,18 +61,39 @@ module ssd_top(
                           .input_signal(btn1_debounce),
                           .output_pulse(btn1_pulse));
 
-  always_latch @(posedge rst, posedge btn1_pulse)
+  always_ff @(posedge clk, posedge rst)
   begin
-    if (rst ==1)
+    if (rst == 1)
     begin
       c_sel = 1'b0;
+      seg = 4'b0;
     end
-    else if (btn1_pulse == 1'b1)
+    else
     begin
-      c_sel = ~c_sel;
+      if (btn1_pulse && ~sw[0])
+      begin
+        c_sel = ~c_sel;
+      end
+      else if (sw[0])
+      begin
+        c_sel = ~c_sel;
+        seg = c_sel ? l_ssd : r_ssd;
+      end
     end
   end
 
+
+  always_ff @(posedge clk)
+  begin
+    if (is_a_key_pressed)
+    begin
+      l_ssd = output_ssd;
+      r_ssd = l_ssd;
+    end
+  end
+
+  assign led_g = is_a_key_pressed;
+  assign rst = btn[0];
   assign led = decode_out;
   assign chip_sel = c_sel;
 
