@@ -34,8 +34,8 @@ module ssd_top(
                    .is_a_key_pressed(is_a_key_pressed));
 
   disp_ctrl ssd_i(
-              .disp_val(sw),
-              //.disp_val(decode_out),
+              //.disp_val(sw),
+              .disp_val(decode_out),
               .seg_out(seg));
 
   debounce  #(
