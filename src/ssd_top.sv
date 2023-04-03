@@ -17,12 +17,14 @@ module ssd_top(
   logic rst;
   logic btn1_debounce;
   logic btn1_pulse;
-  logic l_ssd;
-  logic r_ssd;
-  logic output_ssd;
+  logic [6:0] l_ssd;
+  logic [6:0] r_ssd;
+  logic [6:0]output_ssd;
+  logic [6:0] seg_reg;
   logic [7:0] keypad_w;
   logic c_sel;
   logic is_a_key_pressed;
+  logic is_a_key_pressed_pulse;
   logic [3:0] decode_out;
 
   //assign keypad_w =
@@ -61,37 +63,47 @@ module ssd_top(
                           .input_signal(btn1_debounce),
                           .output_pulse(btn1_pulse));
 
+  single_pulse_detector #(
+                          .detect_type(2'b0)
+                        )
+                        pls_inst_2 (
+                          .clk(clk),
+                          .rst(rst),
+                          .input_signal(is_a_key_pressed),
+                          .output_pulse(is_a_key_pressed_pulse));
+
   always_ff @(posedge clk, posedge rst)
   begin
     if (rst == 1)
     begin
       c_sel = 1'b0;
-      seg = 4'b0;
+      l_ssd = output_ssd;
+      r_ssd = output_ssd;
     end
     else
     begin
-      if (btn1_pulse && ~sw[0])
+      if (~sw[0]) // Part 1, One toggle display.
       begin
-        c_sel = ~c_sel;
+        seg_reg = output_ssd;
+        if (btn1_pulse)
+        begin
+          c_sel = ~c_sel;
+        end
       end
-      else if (sw[0])
+      else // Part 2, Two Displays starting from the left
       begin
         c_sel = ~c_sel;
-        seg = c_sel ? l_ssd : r_ssd;
+        seg_reg = c_sel ? l_ssd : r_ssd;
+        if (is_a_key_pressed_pulse)
+        begin
+          l_ssd = output_ssd;
+          r_ssd = l_ssd;
+        end
       end
     end
   end
 
-
-  always_ff @(posedge clk)
-  begin
-    if (is_a_key_pressed)
-    begin
-      l_ssd = output_ssd;
-      r_ssd = l_ssd;
-    end
-  end
-
+  assign seg = seg_reg;
   assign led_g = is_a_key_pressed;
   assign rst = btn[0];
   assign led = decode_out;
