@@ -9,22 +9,28 @@ module ssd_tb();
   logic led_g; // Output
   logic [6:0] seg; // Output
   logic chip_sel; // Output
-  trireg  [7:0] keypad; // Inout
+  wire  [7:0] keypad; // Inout - bidirectional signal from DUT
+
+  reg keypad_inout_drive;  // locally driven value
+  wire keypad_inout_recv;  // locally received value (optional, but models typical pad)
+  
+  assign keypad = keypad_inout_drive;
+  assign keypad_inout_recv = keypad;
 
   parameter CP = 20;
 
-  ssd_top ssd_uut (.*);
+  // ssd_top ssd_uut (.*);
 
-//   ssd_top ssd_uut (
-//     .clk(clk),
-//     .btn(btn),
-//     .sw(sw),
-//     .led(led),
-//     .led_g(led_g),
-//     .seg(seg),
-//     .chip_sel(chip_sel),
-//     .keypad(keypad)
-//   );
+  ssd_top ssd_uut (
+    .clk(clk),
+    .btn(btn),
+    .sw(sw),
+    .led(led),
+    .led_g(led_g),
+    .seg(seg),
+    .chip_sel(chip_sel),
+    .keypad(keypad)
+  );
 
   // Process made to toggle the clock every 5ns.
   always

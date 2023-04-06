@@ -19,6 +19,7 @@ module ssd_top(
   logic btn1_pulse;
   logic [6:0] l_ssd;
   logic [6:0] r_ssd;
+  logic [13:0] two_ssd;
   logic [6:0]output_ssd;
   logic [6:0] seg_reg;
   logic [7:0] keypad_w;
@@ -77,8 +78,8 @@ module ssd_top(
     if (rst == 1)
     begin
       c_sel = 1'b0;
-      l_ssd = output_ssd;
-      r_ssd = output_ssd;
+      // l_ssd = output_ssd;
+      // r_ssd = output_ssd;
     end
     else
     begin
@@ -92,14 +93,47 @@ module ssd_top(
       end
       else // Part 2, Two Displays starting from the left
       begin
-        c_sel = ~c_sel;
-        seg_reg = c_sel ? l_ssd : r_ssd;
-        if (is_a_key_pressed_pulse)
+        if (c_sel)
         begin
-          l_ssd = output_ssd;
-          r_ssd = l_ssd;
+          c_sel = 1'b0;
+          //seg_reg = l_ssd;
+          seg_reg = two_ssd[13:7];
         end
+        else
+        begin
+          c_sel = 1'b1;
+          //seg_reg = r_ssd;
+          seg_reg = two_ssd[6:0];
+        end
+
+        // This would replace everything from if(c_sel) until the end of that IF.
+
+        //   c_sel = ~c_sel;
+        //   seg_reg = c_sel ? l_ssd : r_ssd;
+        //   if (is_a_key_pressed_pulse)
+        //   begin
+        //     l_ssd = output_ssd;
+        //     //r_ssd = l_ssd;
+        //     r_ssd = 'b0110000;
+        //   end
       end
+    end
+  end
+
+  //always_latch @(posedge rst, posedge is_a_key_pressed_pulse)
+  always_latch
+  begin
+    if (rst ==1)
+    begin
+      two_ssd = {output_ssd,output_ssd};
+      // l_ssd = output_ssd;
+      // r_ssd = output_ssd;
+    end
+    else if (is_a_key_pressed_pulse == 1'b1)
+    begin
+      two_ssd = {output_ssd,two_ssd[13:7]};
+      // l_ssd = output_ssd;
+      // r_ssd = l_ssd;
     end
   end
 
