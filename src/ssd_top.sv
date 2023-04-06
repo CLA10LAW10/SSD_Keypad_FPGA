@@ -26,7 +26,10 @@ module ssd_top(
   logic c_sel;
   logic is_a_key_pressed;
   logic is_a_key_pressed_pulse;
+  logic key_press;
   logic [3:0] decode_out;
+  logic [3:0] decode1;
+  logic [3:0] decode2;
 
   //assign keypad_w =
   // State for the left and the right
@@ -39,10 +42,20 @@ module ssd_top(
                    .decode_out(decode_out), // Pass to SSD Controller
                    .is_a_key_pressed(is_a_key_pressed));
 
-  disp_ctrl ssd_i(
+  disp_ctrl ssd_1(
               //.disp_val(sw),
               .disp_val(decode_out),
               .seg_out(output_ssd));
+
+  disp_ctrl ssd_2a(
+              //.disp_val(sw),
+              .disp_val(decode1),
+              .seg_out(output_ssd1));
+
+  disp_ctrl ssd_2b(
+              //.disp_val(sw),
+              .disp_val(decode2),
+              .seg_out(output_ssd2));
 
   debounce  #(
               .clk_freq(clk_freq),
@@ -93,51 +106,79 @@ module ssd_top(
       end
       else // Part 2, Two Displays starting from the left
       begin
-        if (c_sel)
+
+        c_sel = ~c_sel;
+        seg_reg = c_sel ? output_ssd1 : output_ssd2;
+          // if (c_sel)
+          // begin
+          //   c_sel = 1'b0;
+          //   //seg_reg = l_ssd;
+          //   seg_reg = two_ssd[13:7];
+          // end
+          // else
+          // begin
+          //   c_sel = 1'b1;
+          //   //seg_reg = r_ssd;
+          //   //seg_reg = two_ssd[6:0];
+          // end
+
+          // This would replace everything from if(c_sel) until the end of that IF.
+
+          //   c_sel = ~c_sel;
+          //   seg_reg = c_sel ? l_ssd : r_ssd;
+          //   if (is_a_key_pressed_pulse)
+          //   begin
+          //     l_ssd = output_ssd;
+          //     //r_ssd = l_ssd;
+          //     r_ssd = 'b0110000;
+          //   end
+        end
+      end
+    end
+
+    always_ff @ (posedge clk, posedge rst)
+    begin
+      if (rst == 1)
+      begin
+        key_press = 0;
+        decode1 = 4'b0;
+        decode2 = 4'b0;
+      end
+      else
+      begin
+        if (is_a_key_pressed_pulse)
         begin
-          c_sel = 1'b0;
-          //seg_reg = l_ssd;
-          seg_reg = two_ssd[13:7];
+          key_press = ~key_press;
+        end
+        if (~key_press)
+        begin
+          decode1 = decode_out;
         end
         else
         begin
-          c_sel = 1'b1;
-          //seg_reg = r_ssd;
-          seg_reg = two_ssd[6:0];
+          decode2 = decode_out;
         end
-
-        // This would replace everything from if(c_sel) until the end of that IF.
-
-        //   c_sel = ~c_sel;
-        //   seg_reg = c_sel ? l_ssd : r_ssd;
-        //   if (is_a_key_pressed_pulse)
-        //   begin
-        //     l_ssd = output_ssd;
-        //     //r_ssd = l_ssd;
-        //     r_ssd = 'b0110000;
-        //   end
       end
     end
-  end
 
-  //always_latch @(posedge rst, posedge is_a_key_pressed_pulse)
-  always_latch
-  begin
-    if (rst ==1)
-    begin
-      two_ssd = {output_ssd,output_ssd};
-      // l_ssd = output_ssd;
-      // r_ssd = output_ssd;
-    end
-    else if (is_a_key_pressed_pulse == 1'b1)
-    begin
-      two_ssd = {output_ssd,two_ssd[13:7]};
-      // l_ssd = output_ssd;
-      // r_ssd = l_ssd;
-    end
-  end
+    // //always_latch @(posedge rst, posedge is_a_key_pressed_pulse)
+    // always_latch
+    // begin
+    //   if (rst ==1)
+    //   begin
+    //     two_ssd = {output_ssd,output_ssd};
+    //     // l_ssd = output_ssd;
+    //     // r_ssd = output_ssd;
+    //   end
+    //   else if (is_a_key_pressed_pulse == 1'b1)
+    //   begin
+    //     two_ssd = {output_ssd,two_ssd[13:7]};
+    //     // l_ssd = output_ssd;
+    //     // r_ssd = l_ssd;
+    //   end
+    // end
 
-  assign seg = seg_reg;
+    assign seg = seg_reg;
   assign led_g = is_a_key_pressed;
   assign rst = btn[0];
   assign led = decode_out;
