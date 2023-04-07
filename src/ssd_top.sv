@@ -11,7 +11,7 @@ module ssd_top(
     inout [7:0] keypad
   );
 
-  parameter clk_freq = 125_000_000;
+  parameter clk_freq = 50_000_000;
   parameter stable_time = 10; // ms
 
   logic rst;
@@ -25,6 +25,7 @@ module ssd_top(
   logic [7:0] keypad_w;
   logic c_sel;
   logic is_a_key_pressed;
+  logic is_a_key_pressed_db;
   logic is_a_key_pressed_pulse;
   logic key_press;
   logic [3:0] decode_out;
@@ -77,13 +78,24 @@ module ssd_top(
                           .input_signal(btn1_debounce),
                           .output_pulse(btn1_pulse));
 
+  debounce  #(
+              .clk_freq(clk_freq),
+              .stable_time(stable_time)
+            )
+            db_inst_2
+            (
+              .clk(clk),
+              .rst(rst),
+              .button(is_a_key_pressed),
+              .result(is_a_key_pressed_db));
+
   single_pulse_detector #(
                           .detect_type(2'b0)
                         )
                         pls_inst_2 (
                           .clk(clk),
                           .rst(rst),
-                          .input_signal(is_a_key_pressed),
+                          .input_signal(is_a_key_pressed_db),
                           .output_pulse(is_a_key_pressed_pulse));
 
   //always_ff @(posedge clk, posedge rst)
@@ -107,9 +119,9 @@ module ssd_top(
       begin
         c_sel = clk ? 1'b1 : 1'b0;
         //c_sel = ~c_sel;
-         seg_reg = c_sel ? output_ssd : output_ssd; // Assign the same output to both displays
-         //seg_reg = c_sel ? output_ssd1 : output_ssd2; // Should assign tweo different numbers, left to right
-         //seg_reg = c_sel ? 7'b1111110 : 7'b1101101; // Attempt to output two numbers card coded.
+        //seg_reg = c_sel ? output_ssd : output_ssd; // Assign the same output to both displays
+        seg_reg = c_sel ? output_ssd1 : output_ssd2; // Should assign tweo different numbers, left to right
+        //seg_reg = c_sel ? 7'b1111110 : 7'b1101101; // Attempt to output two numbers card coded.
       end
     end
   end
