@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module ssd_top(
+module ssd_top2(
     input clk,
     input [3:0] btn,
     input [3:0] sw,
@@ -112,19 +112,19 @@ module ssd_top(
   //   end
   // end
 
-  always_comb
-  begin
-    if (rst == 1)
-    begin
-      c_sel = 1'b0;
-    end
-    else
-    begin
-      c_sel = clk ? 1'b1 : 1'b0;
-      //c_sel = ~c_sel;
-      seg_reg = c_sel ? 7'b1111110 : 7'b1101101;
-    end
-  end
+//  always_latch @ (posedge rst)
+//  begin
+//    if (rst == 1)
+//    begin
+//      c_sel = 1'b0;
+//    end
+//    else
+//    begin
+//      //c_sel = clk ? 1'b1 : 1'b0;
+//      //c_sel = ~c_sel;
+//      seg_reg = c_sel ? 7'b1111110 : 7'b1101101;
+//    end
+//  end
 
   always_comb
   begin
@@ -150,8 +150,9 @@ module ssd_top(
       end
     end
   end
-  //assign c_sel = clk ? 1'b1 : 1'b0;
-  assign seg = seg_reg;
+  assign c_sel = clk ? 1'b1 : 1'b0;
+  //assign seg = seg_reg;
+  assign seg = c_sel ? 7'b1111110 : 7'b1101101;
   assign led_g = is_a_key_pressed;
   assign rst = btn[0];
   assign led = decode_out;

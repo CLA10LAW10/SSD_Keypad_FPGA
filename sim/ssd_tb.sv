@@ -11,11 +11,21 @@ module ssd_tb();
   logic chip_sel; // Output
   wire  [7:0] keypad; // Inout - bidirectional signal from DUT
 
-  reg keypad_inout_drive;  // locally driven value
-  wire keypad_inout_recv;  // locally received value (optional, but models typical pad)
+  reg [7:0] keypad_inout_drive;  // locally driven value
+  logic [7:0] keypad_tb;  // locally received value (optional, but models typical pad)
   
-  assign keypad = keypad_inout_drive;
-  assign keypad_inout_recv = keypad;
+  assign keypad = (!keypad_inout_drive) ? keypad_tb : 'bZ;
+  //assign keypad_inout_recv = keypad;
+
+// for inout port u can do something like this:
+
+// module testbench;
+// wire    bidir_port;
+// reg     oe;
+
+// assign bidir_port = (!oe) ? data_tx : 1'bZ;
+
+// when oe is low, the bidir_port, bidir_port = data_tx.. which means u can write stuff into it.. when oe is HIGH, it becomes an output port..
 
   parameter CP = 20;
 
@@ -45,18 +55,18 @@ module ssd_tb();
   initial
   begin
     sw = 4'd0;
-    keypad = 8'd0;
+    keypad_tb = 8'd0;
     btn = 4'd1;
     #CP;
     btn = 4'd0;
 
-    sw = 4'd1;
-    #CP;
+    // sw = 4'd1;
+    // #CP;
 
-    // keypad = 8'b1011_1011;
-    // #(CP * 20000000);  
-//    keypad = 8'b0111_0111;
-//    #(CP * 2);
+    keypad_tb = 8'b1011_1011;
+    #(CP * 20000000);  
+   keypad_tb = 8'b0111_0111;
+   #(CP * 2);
   end
 
 endmodule

@@ -86,7 +86,8 @@ module ssd_top(
                           .input_signal(is_a_key_pressed),
                           .output_pulse(is_a_key_pressed_pulse));
 
-  always_ff @(posedge clk, posedge rst)
+  //always_ff @(posedge clk, posedge rst)
+  always_comb
   begin
     if (rst == 1)
     begin
@@ -104,13 +105,17 @@ module ssd_top(
       end
       else // Part 2, Two Displays starting from the left
       begin
-        c_sel = ~c_sel;
-         seg_reg = c_sel ? output_ssd : output_ssd;
+        c_sel = clk ? 1'b1 : 1'b0;
+        //c_sel = ~c_sel;
+         seg_reg = c_sel ? output_ssd : output_ssd; // Assign the same output to both displays
+         //seg_reg = c_sel ? output_ssd1 : output_ssd2; // Should assign tweo different numbers, left to right
+         //seg_reg = c_sel ? 7'b1111110 : 7'b1101101; // Attempt to output two numbers card coded.
       end
     end
   end
 
-  always_ff @ (posedge clk, posedge rst)
+  //always_ff @ (posedge clk, posedge rst)
+  always_comb
   begin
     if (rst == 1)
     begin
@@ -137,6 +142,7 @@ module ssd_top(
 
   assign seg = seg_reg;
   assign led_g = is_a_key_pressed;
+  //assign led_g = c_sel;
   assign rst = btn[0];
   assign led = decode_out;
   assign chip_sel = c_sel;
