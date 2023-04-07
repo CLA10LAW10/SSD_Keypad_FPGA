@@ -86,7 +86,33 @@ module ssd_top(
                           .input_signal(is_a_key_pressed),
                           .output_pulse(is_a_key_pressed_pulse));
 
-  always_ff @(posedge clk, posedge rst)
+  // always_ff @(posedge clk, posedge rst)
+  // begin
+  //   if (rst == 1)
+  //   begin
+  //     //c_sel = 1'b0;
+  //   end
+  //   else
+  //   begin
+  //     if (~sw[0]) // Part 1, One toggle display.
+  //     begin
+  //       seg_reg = output_ssd;
+  //       // if (btn1_pulse)
+  //       // begin
+  //       //   c_sel = ~c_sel;
+  //       // end
+  //     end
+  //     else // Part 2, Two Displays starting from the left
+  //     begin
+  //       //c_sel = ~c_sel;
+  //       // seg_reg = c_sel ? output_ssd : output_ssd;
+  //       //seg_reg = c_sel ? output_ssd1 : output_ssd2;
+  //       seg_reg = c_sel ? 7'b1111110 : 7'b1101101;
+  //     end
+  //   end
+  // end
+
+  always_comb
   begin
     if (rst == 1)
     begin
@@ -94,23 +120,13 @@ module ssd_top(
     end
     else
     begin
-      if (~sw[0]) // Part 1, One toggle display.
-      begin
-        seg_reg = output_ssd;
-        if (btn1_pulse)
-        begin
-          c_sel = ~c_sel;
-        end
-      end
-      else // Part 2, Two Displays starting from the left
-      begin
-        c_sel = ~c_sel;
-         seg_reg = c_sel ? output_ssd : output_ssd;
-      end
+      c_sel = clk ? 1'b1 : 1'b0;
+      //c_sel = ~c_sel;
+      seg_reg = c_sel ? 7'b1111110 : 7'b1101101;
     end
   end
 
-  always_ff @ (posedge clk, posedge rst)
+  always_comb
   begin
     if (rst == 1)
     begin
@@ -134,7 +150,7 @@ module ssd_top(
       end
     end
   end
-
+  //assign c_sel = clk ? 1'b1 : 1'b0;
   assign seg = seg_reg;
   assign led_g = is_a_key_pressed;
   assign rst = btn[0];
