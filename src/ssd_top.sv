@@ -69,15 +69,6 @@ module ssd_top(
               .button(btn[1]),
               .result(btn1_debounce));
 
-  single_pulse_detector #(
-                          .detect_type(2'b0)
-                        )
-                        pls_inst_1 (
-                          .clk(clk),
-                          .rst(rst),
-                          .input_signal(btn1_debounce),
-                          .output_pulse(btn1_pulse));
-
   debounce  #(
               .clk_freq(clk_freq),
               .stable_time(stable_time)
@@ -88,6 +79,15 @@ module ssd_top(
               .rst(rst),
               .button(is_a_key_pressed),
               .result(is_a_key_pressed_db));
+
+  single_pulse_detector #(
+                          .detect_type(2'b0)
+                        )
+                        pls_inst_1 (
+                          .clk(clk),
+                          .rst(rst),
+                          .input_signal(btn1_debounce),
+                          .output_pulse(btn1_pulse));
 
   single_pulse_detector #(
                           .detect_type(2'b0)
@@ -120,52 +120,40 @@ module ssd_top(
         c_sel = clk ? 1'b1 : 1'b0;
         //c_sel = ~c_sel;
         //seg_reg = c_sel ? output_ssd : output_ssd; // Assign the same output to both displays
-        //seg_reg = c_sel ? output_ssd1 : output_ssd2; // Should assign tweo different numbers, left to right
+        seg_reg = c_sel ? output_ssd1 : output_ssd2; // Should assign tweo different numbers, left to right
         //seg_reg = c_sel ? 7'b1111110 : 7'b1101101; // Attempt to output two numbers card coded.
-        seg_reg = c_sel ? l_ssd : r_ssd;
       end
     end
   end
 
-  // //always_ff @ (posedge clk, posedge rst)
-  // always_comb
-  // begin
-  //   if (rst == 1)
-  //   begin
-  //     key_press = 0;
-  //     decode1 = 4'b0;
-  //     decode2 = 4'b0;
-  //   end
-  //   else
-  //   begin
-  //     if (is_a_key_pressed_pulse)
-  //     begin
-  //       key_press = ~key_press;
-  //     end
-  //     if (~key_press)
-  //     begin
-  //       decode1 = decode_out;
-  //     end
-  //     else
-  //     begin
-  //       decode2 = decode_out;
-  //     end
-  //   end
-  // end
-
+  //always_ff @ (posedge clk, posedge rst)
   always_comb
   begin
-    if (is_a_key_pressed_pulse)
+    if (rst == 1)
     begin
-      l_ssd = output_ssd;
-      r_ssd = l_ssd;
+      key_press = 0;
+      decode1 = 4'b0;
+      decode2 = 4'b0;
+    end
+    else
+    begin
+      if (is_a_key_pressed_pulse)
+      begin
+        key_press = ~key_press;
+      end
+      if (~key_press)
+      begin
+        decode1 = decode_out;
+      end
+      else
+      begin
+        decode2 = decode_out;
+      end
     end
   end
 
   assign seg = seg_reg;
-  //assign led_g = is_a_key_pressed;
-  assign led_g = sw[0];
-  //assign led_g = btn[1];
+  assign led_g = is_a_key_pressed_db;
   //assign led_g = c_sel;
   assign rst = btn[0];
   assign led = decode_out;
