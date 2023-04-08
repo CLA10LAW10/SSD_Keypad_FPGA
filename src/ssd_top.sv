@@ -11,7 +11,7 @@ module ssd_top(
     inout [7:0] keypad
   );
 
-  parameter clk_freq = 50_000_000;
+  parameter clk_freq = 125_000_000;
   parameter stable_time = 10; // ms
 
   logic rst;
@@ -120,40 +120,52 @@ module ssd_top(
         c_sel = clk ? 1'b1 : 1'b0;
         //c_sel = ~c_sel;
         //seg_reg = c_sel ? output_ssd : output_ssd; // Assign the same output to both displays
-        seg_reg = c_sel ? output_ssd1 : output_ssd2; // Should assign tweo different numbers, left to right
+        //seg_reg = c_sel ? output_ssd1 : output_ssd2; // Should assign tweo different numbers, left to right
         //seg_reg = c_sel ? 7'b1111110 : 7'b1101101; // Attempt to output two numbers card coded.
+        seg_reg = c_sel ? l_ssd : r_ssd;
       end
     end
   end
 
-  //always_ff @ (posedge clk, posedge rst)
+  // //always_ff @ (posedge clk, posedge rst)
+  // always_comb
+  // begin
+  //   if (rst == 1)
+  //   begin
+  //     key_press = 0;
+  //     decode1 = 4'b0;
+  //     decode2 = 4'b0;
+  //   end
+  //   else
+  //   begin
+  //     if (is_a_key_pressed_pulse)
+  //     begin
+  //       key_press = ~key_press;
+  //     end
+  //     if (~key_press)
+  //     begin
+  //       decode1 = decode_out;
+  //     end
+  //     else
+  //     begin
+  //       decode2 = decode_out;
+  //     end
+  //   end
+  // end
+
   always_comb
   begin
-    if (rst == 1)
+    if (is_a_key_pressed_pulse)
     begin
-      key_press = 0;
-      decode1 = 4'b0;
-      decode2 = 4'b0;
-    end
-    else
-    begin
-      if (is_a_key_pressed_pulse)
-      begin
-        key_press = ~key_press;
-      end
-      if (~key_press)
-      begin
-        decode1 = decode_out;
-      end
-      else
-      begin
-        decode2 = decode_out;
-      end
+      l_ssd = output_ssd;
+      r_ssd = l_ssd;
     end
   end
 
   assign seg = seg_reg;
-  assign led_g = is_a_key_pressed;
+  //assign led_g = is_a_key_pressed;
+  assign led_g = sw[0];
+  //assign led_g = btn[1];
   //assign led_g = c_sel;
   assign rst = btn[0];
   assign led = decode_out;
