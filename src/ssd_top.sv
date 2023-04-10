@@ -11,29 +11,29 @@ module ssd_top(
     inout [7:0] keypad
   );
 
-  parameter clk_freq = 125_000_000;
+  parameter clk_freq = 50_000_000;
   parameter stable_time = 10; // ms
+  parameter stable_time_keypad = 1; // ms
+
+  int count;
 
   logic rst;
+  logic c_sel_pulse;
   logic btn1_debounce;
   logic btn1_pulse;
-  logic [6:0] l_ssd;
-  logic [6:0] r_ssd;
+  logic [6:0] output_ssd1;
+  logic [6:0] output_ssd2;
   logic [13:0] two_ssd;
   logic [6:0]output_ssd;
   logic [6:0] seg_reg;
   logic [7:0] keypad_w;
   logic c_sel;
   logic is_a_key_pressed;
-  logic is_a_key_pressed_db;
   logic is_a_key_pressed_pulse;
   logic key_press;
   logic [3:0] decode_out;
   logic [3:0] decode1;
   logic [3:0] decode2;
-
-  //assign keypad_w =
-  // State for the left and the right
 
   keypad_decoder de_inst1(
                    .clk(clk),
@@ -69,9 +69,20 @@ module ssd_top(
               .button(btn[1]),
               .result(btn1_debounce));
 
+
+
+  single_pulse_detector #(
+                          .detect_type(2'b0)
+                        )
+                        pls_inst_1 (
+                          .clk(clk),
+                          .rst(rst),
+                          .input_signal(btn1_debounce),
+                          .output_pulse(btn1_pulse));
+
   debounce  #(
               .clk_freq(clk_freq),
-              .stable_time(stable_time)
+              .stable_time(stable_time_keypad)
             )
             db_inst_2
             (
@@ -83,23 +94,20 @@ module ssd_top(
   single_pulse_detector #(
                           .detect_type(2'b0)
                         )
-                        pls_inst_1 (
-                          .clk(clk),
-                          .rst(rst),
-                          .input_signal(btn1_debounce),
-                          .output_pulse(btn1_pulse));
-
-  single_pulse_detector #(
-                          .detect_type(2'b0)
-                        )
                         pls_inst_2 (
                           .clk(clk),
                           .rst(rst),
-                          .input_signal(is_a_key_pressed_db),
+                          .input_signal(is_a_key_pressed),
                           .output_pulse(is_a_key_pressed_pulse));
 
-  //always_ff @(posedge clk, posedge rst)
-  always_comb
+  pulse_gen pg_inst1(
+              .clk(clk),
+              .rst(rst),
+              .pulse(c_sel_pulse)
+            );
+
+  always_ff @(posedge clk, posedge rst)
+    //always_comb
   begin
     if (rst == 1)
     begin
@@ -117,44 +125,76 @@ module ssd_top(
       end
       else // Part 2, Two Displays starting from the left
       begin
-        c_sel = clk ? 1'b1 : 1'b0;
-        //c_sel = ~c_sel;
-        //seg_reg = c_sel ? output_ssd : output_ssd; // Assign the same output to both displays
+        if (c_sel_pulse)
+        begin
+          c_sel = ~c_sel;
+        end
+        //seg_reg = c_sel ? output_ssd1 : output_ssd1; // Assign the same output to both displays
         seg_reg = c_sel ? output_ssd1 : output_ssd2; // Should assign tweo different numbers, left to right
         //seg_reg = c_sel ? 7'b1111110 : 7'b1101101; // Attempt to output two numbers card coded.
       end
     end
   end
 
-  //always_ff @ (posedge clk, posedge rst)
-  always_comb
+  always_ff @ (posedge clk, posedge rst)
+    //always_comb
   begin
     if (rst == 1)
     begin
       key_press = 0;
       decode1 = 4'b0;
       decode2 = 4'b0;
+      count = 'd0;
     end
     else
     begin
-      if (is_a_key_pressed_pulse)
+
+      if (is_a_key_pressed_db)
       begin
-        key_press = ~key_press;
-      end
-      if (~key_press)
-      begin
-        decode1 = decode_out;
-      end
-      else
-      begin
-        decode2 = decode_out;
+        if (~key_press)
+        begin
+          decode1 = decode_out;
+          if (count == clk_freq) begin
+            key_press = 1'b1;
+            count = 0;
+          end
+          else begin
+            count = count + 1;
+          end
+            
+        end
+        else
+        begin
+          decode2 = decode_out;
+          if (count ==  clk_freq) begin
+            key_press = 1'b0;
+            count = 0;
+          end
+          else begin
+            count = count + 1;
+          end
+
+        end
       end
     end
   end
 
+//   always_comb
+// begin
+//   if (decode1 == decode_out || decode2 == decode_out) begin
+//     if (count == clk_freq) begin
+//       key_press = ~key_press;
+//       count = 0;
+//     end
+//     else begin
+//       count = count + 1;
+//     end
+//   end
+// end
+
   assign seg = seg_reg;
-  assign led_g = is_a_key_pressed_db;
-  //assign led_g = c_sel;
+  //assign led_g = is_a_key_pressed_db;
+  assign led_g = key_press;
   assign rst = btn[0];
   assign led = decode_out;
   assign chip_sel = c_sel;
