@@ -12,6 +12,39 @@ module keypad_decoder(
   logic [19:0] sclk;
   logic [3:0] decode_reg;
   logic is_a_key_pressed_reg;
+  logic is_a_key_pressed_pulse;
+
+  int count;
+
+  always @ (posedge clk, posedge rst, posedge is_a_key_pressed_reg)
+  begin
+    if (rst == 1'b1)
+    begin
+      is_a_key_pressed_pulse = 1'b0;
+      count = 1'b0;
+    end
+    else if (is_a_key_pressed_reg == 1'b1) begin
+      is_a_key_pressed_pulse = 1'b1;
+    end
+    else
+    begin
+
+      if (is_a_key_pressed_pulse)
+      begin
+        if (count == 50_000_000)
+        begin
+          is_a_key_pressed_pulse = 1'b0;
+          count <= 0;
+        end
+        else
+        begin
+          count <= count + 1;
+        end
+      end
+
+
+    end
+  end
 
   always_ff @ (posedge clk, posedge rst)
   begin
@@ -203,14 +236,14 @@ module keypad_decoder(
 
         sclk = 'b0;
       end
-    else
-    begin
-      sclk = sclk + 1;
-    end
-  end // end clk
-end // end always_ff
+      else
+      begin
+        sclk = sclk + 1;
+      end
+    end // end clk
+  end // end always_ff
 
-assign is_a_key_pressed = is_a_key_pressed_reg;
-assign decode_out = decode_reg;
+  assign is_a_key_pressed = is_a_key_pressed_pulse;
+  assign decode_out = decode_reg;
 
 endmodule

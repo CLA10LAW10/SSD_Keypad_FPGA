@@ -82,7 +82,7 @@ module ssd_top(
 
   debounce  #(
               .clk_freq(clk_freq),
-              .stable_time(stable_time_keypad)
+              .stable_time(stable_time)
             )
             db_inst_2
             (
@@ -97,7 +97,7 @@ module ssd_top(
                         pls_inst_2 (
                           .clk(clk),
                           .rst(rst),
-                          .input_signal(is_a_key_pressed),
+                          .input_signal(is_a_key_pressed_db),
                           .output_pulse(is_a_key_pressed_pulse));
 
   pulse_gen pg_inst1(
@@ -129,15 +129,12 @@ module ssd_top(
         begin
           c_sel = ~c_sel;
         end
-        //seg_reg = c_sel ? output_ssd1 : output_ssd1; // Assign the same output to both displays
         seg_reg = c_sel ? output_ssd1 : output_ssd2; // Should assign tweo different numbers, left to right
-        //seg_reg = c_sel ? 7'b1111110 : 7'b1101101; // Attempt to output two numbers card coded.
       end
     end
   end
 
   always_ff @ (posedge clk, posedge rst)
-    //always_comb
   begin
     if (rst == 1)
     begin
@@ -149,52 +146,24 @@ module ssd_top(
     else
     begin
 
-      if (is_a_key_pressed_db)
+      if (is_a_key_pressed_pulse)
       begin
         if (~key_press)
         begin
           decode1 = decode_out;
-          if (count == clk_freq) begin
-            key_press = 1'b1;
-            count = 0;
-          end
-          else begin
-            count = count + 1;
-          end
-            
+          key_press = 1'b1;
         end
         else
         begin
           decode2 = decode_out;
-          if (count ==  clk_freq) begin
-            key_press = 1'b0;
-            count = 0;
-          end
-          else begin
-            count = count + 1;
-          end
-
+          key_press = 1'b0;
         end
       end
     end
   end
 
-//   always_comb
-// begin
-//   if (decode1 == decode_out || decode2 == decode_out) begin
-//     if (count == clk_freq) begin
-//       key_press = ~key_press;
-//       count = 0;
-//     end
-//     else begin
-//       count = count + 1;
-//     end
-//   end
-// end
-
   assign seg = seg_reg;
-  //assign led_g = is_a_key_pressed_db;
-  assign led_g = key_press;
+  assign led_g = is_a_key_pressed;
   assign rst = btn[0];
   assign led = decode_out;
   assign chip_sel = c_sel;
