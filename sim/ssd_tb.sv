@@ -17,17 +17,6 @@ module ssd_tb();
 
   ssd_top ssd_uut (.*);
 
-  // ssd_top ssd_uut (
-  //   .clk(clk),
-  //   .btn(btn),
-  //   .sw(sw),
-  //   .led(led),
-  //   .led_g(led_g),
-  //   .seg(seg),
-  //   .chip_sel(chip_sel),
-  //   .keypad(keypad)
-  // );
-
   // Process made to toggle the clock every 5ns.
   always
   begin
