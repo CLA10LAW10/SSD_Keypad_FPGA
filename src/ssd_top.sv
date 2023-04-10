@@ -8,7 +8,9 @@ module ssd_top(
     output led_g,
     output [6:0] seg,
     output chip_sel,
-    inout [7:0] keypad
+    input [3:0] row,
+    output logic [3:0] col
+    //inout [7:0] keypad
   );
 
   parameter clk_freq = 50_000_000;
@@ -16,6 +18,9 @@ module ssd_top(
   parameter stable_time_keypad = 1; // ms
 
   int count;
+
+logic [7:0] keypad;
+assign keypad = {row,col};
 
   logic rst;
   logic c_sel_pulse;
