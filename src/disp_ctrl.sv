@@ -19,11 +19,11 @@ module disp_ctrl(
         4'h8 : seg_out = 7'b1111111; //8
         4'h9 : seg_out = 7'b1110011; //9
         4'ha : seg_out = 7'b1110111; //A
-        4'hb : seg_out = 7'b0011111; //B
+        4'hb : seg_out = 7'b0011111; //b
         4'hc : seg_out = 7'b1001110; //C
         4'hd : seg_out = 7'b0111101; //d
-        4'he : seg_out = 7'b1001111; //14
-        4'hf : seg_out = 7'b1000111; //15
+        4'he : seg_out = 7'b1001111; //E
+        4'hf : seg_out = 7'b1000111; //F
         default : seg_out = 7'b0000000;
       endcase
     end

@@ -8,19 +8,16 @@ module ssd_top(
     output led_g,
     output [6:0] seg,
     output chip_sel,
-    input [3:0] row,
-    output logic [3:0] col
-    //inout [7:0] keypad
+    // input [3:0] row, // Used for simulation
+    // output logic [3:0] col // Used for sim
+    inout [7:0] keypad
   );
 
   parameter clk_freq = 50_000_000;
   parameter stable_time = 10; // ms
-  parameter stable_time_keypad = 1; // ms
 
-  int count;
-
-logic [7:0] keypad;
-assign keypad = {row,col};
+  // logic [7:0] keypad; // Used for simulation
+  // assign keypad = {row,col}; // Used for simulation
 
   logic rst;
   logic c_sel_pulse;
@@ -146,7 +143,6 @@ assign keypad = {row,col};
       key_press = 0;
       decode1 = 4'b0;
       decode2 = 4'b0;
-      count = 'd0;
     end
     else
     begin
